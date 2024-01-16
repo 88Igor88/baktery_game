@@ -16,18 +16,18 @@ old_vector = (0, 0)
 center = (x//2, y//2)
 while run:
     for event in pygame.event.get():
-        if event == pygame.QUIT:
+        if event.type == pygame.QUIT:
             run = False
-            pygame.quit()
     if pygame.mouse.get_focused():
         pos = pygame.mouse.get_pos()
         vector = pos[0] - center[0], pos[1] - center[1]
         len_ = math.sqrt(vector[0]**2+vector[1]**2)
+        vector = vector[0] / len_, vector[1] / len_
         if len_ <= radius:
             vector = 0, 0
         if vector != old_vector:
             old_vector = vector
-            message = "<{},{}>".format(vector[0], vector[1])
+            message = f"<{vector[0]},{vector[1]}>"#.format(vector[0], vector[1])
             sock.send(message.encode())
     screen.fill(BLACK)
     pygame.draw.circle(screen, (0, 255, 0), center, radius)
@@ -35,4 +35,3 @@ while run:
     data = sock.recv(1024).decode()
     print("Получено: ", data)
 pygame.quit()
-
