@@ -3,12 +3,17 @@ import socket
 from sqlalchemy import create_engine, Column, String, Integer
 from sqlalchemy.orm import declarative_base, sessionmaker
 import psycopg2
+import pygame
 
+pygame.init()
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 main_socket.bind(("localhost", 10000))
 main_socket.setblocking(False)
 main_socket.listen(10)
+WIDHT_ROOM, HEIGHT_ROOM = 4000, 4000
+WIDHT_SERVER, HEIGHT_SERVER = 300, 300
+screen = pygame.display.set_mode([WIDHT_SERVER, HEIGHT_SERVER])
 
 engine = create_engine("postgresql+psycopg2://postgres:igor33igor@localhost:5432/base_test")
 Session = sessionmaker(bind=engine)
@@ -50,34 +55,50 @@ class LocalPlayer():
         self.speed_y = 0
 
 
-print("Настройка завершена")
+run = True
 players = {}
-while True:
+timer = pygame.time.Clock()
+print("Настройка завершена")
+
+while run:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
     try:
         # проверяем желающих войти в игру
         new_socket, addr = main_socket.accept()  # принимаем входящие
         print('Подключился', addr)
         new_socket.setblocking(False)
-        players.append(new_socket)
         new_player = Players(new_socket, addr)
-    except BlockingIOError:
-        pass
+        s.merge(new_player)
+        s.commit()
+        addr = f'({addr[0]},{addr[1]})'
+        data = s.query(Players).filter(Players.adres == addr)
+        for user in data:
+            player = LocalPlayer(user.id, new_socket, new_socket, addr)
+            players[user.id] = player
+
+    except BlockingIOError as e:
+        print(e)
 
     # Считываем команды игроков
-    for sock in players:
+    for id in list(players):
         try:
-            data = sock.recv(1024).decode()
+            data = players[id].sock.recv(1024).decode()
             print("Получил", data)
         except:
             pass
-
     # Отправляем статус игрового поля
-    for sock in players:
+    for id in list(players):
         try:
-            sock.send("Игра".encode())
+            players[id].sock.send("Игра".encode())
         except:
-            players.remove(sock)
-            sock.close()
+            players[id].sock.close()
+            del players[id]
+            s.query(Players).filter(Players.id == id).delete()
+            s.commit()
             print("Сокет закрыт")
-
+    timer.tick(60)
+    pygame.display.update()
     time.sleep(1)
+pygame.quit()
