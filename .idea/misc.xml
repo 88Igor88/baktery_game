@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
-    <option name="sdkName" value="Python 3.9 (baktery_game)" />
+    <option name="sdkUUID" value="f656dac4-93e7-4df3-b9e8-6ef8c76a8f65" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (baktery_game)" project-jdk-type="Python SDK" />
 </project>
